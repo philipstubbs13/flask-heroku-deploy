@@ -18,8 +18,8 @@ if ENV == 'dev':
   app.config['MONGO_URI'] = 'mongodb://localhost:27017/flask-mongo-db'
 else:
   app.debug = False
-  username = os.environ.get('DATABASE_USERNAME')
-  password = os.environ.get('DATABASE_PASSWORD')
+  username = os.environ.get('DATABASE_USERNAME', '')
+  password = os.environ.get('DATABASE_PASSWORD', '')
   app.config['MONGO_URI'] = f'mongodb+srv://{username}:{password}@cluster0-laoqs.mongodb.net/test?retryWrites=true&w=majority'
   app.config['MONGO_DBNAME'] = 'flask-mongo-db'
 

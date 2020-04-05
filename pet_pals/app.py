@@ -6,7 +6,7 @@ from flask import (
     jsonify,
     request,
     redirect)
-from config import db_username, db_password
+# from config import db_username, db_password
 from flask_pymongo import PyMongo
 
 app = Flask(__name__)

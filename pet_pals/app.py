@@ -1,4 +1,3 @@
-# import necessary libraries
 import os
 from flask import (
     Flask,
@@ -6,22 +5,21 @@ from flask import (
     jsonify,
     request,
     redirect)
-# from config import db_username, db_password
 from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 
-ENV = 'prod'
+is_prod = os.environ.get('DATABASE_USERNAME', '')
 
-if ENV == 'dev':
-  app.debug = True
-  app.config['MONGO_URI'] = 'mongodb://localhost:27017/flask-mongo-db'
-else:
+if is_prod:
   app.debug = False
   username = os.environ.get('DATABASE_USERNAME', '')
   password = os.environ.get('DATABASE_PASSWORD', '')
   app.config['MONGO_URI'] = f'mongodb+srv://{username}:{password}@cluster0-laoqs.mongodb.net/test?retryWrites=true&w=majority'
   app.config['MONGO_DBNAME'] = 'flask-mongo-db'
+else:
+  app.debug = True
+  app.config['MONGO_URI'] = 'mongodb://localhost:27017/flask-mongo-db'
 
 mongo = PyMongo(app)
 

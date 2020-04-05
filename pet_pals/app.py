@@ -6,74 +6,45 @@ from flask import (
     jsonify,
     request,
     redirect)
+from config import db_username, db_password
+from flask_pymongo import PyMongo
 
-#################################################
-# Flask Setup
-#################################################
 app = Flask(__name__)
 
-#################################################
-# Database Setup
-#################################################
+ENV = 'prod'
 
-from flask_sqlalchemy import SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '') or "sqlite:///db.sqlite"
+if ENV == 'dev':
+  app.debug = True
+  app.config['MONGO_URI'] = 'mongodb://localhost:27017/flask-mongo-db'
+else:
+  app.debug = False
+  # username = os.environ.get('DATABASE_USERNAME')
+  # password = os.environ.get('DATABASE_PASSWORD')
+  app.config['MONGO_URI'] = f'mongodb+srv://{db_username}:{db_password}@cluster0-laoqs.mongodb.net/test?retryWrites=true&w=majority'
+  app.config['MONGO_DBNAME'] = 'flask-mongo-db'
 
-# Remove tracking modifications
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+mongo = PyMongo(app)
 
-db = SQLAlchemy(app)
-
-from .models import Pet
-
-
-# create route that renders index.html template
 @app.route("/")
 def home():
     return render_template("index.html")
 
+# Route that will trigger the scrape function
+@app.route("/scrape")
+def scrape():
 
-# Query the database and send the jsonified results
-@app.route("/send", methods=["GET", "POST"])
-def send():
-    if request.method == "POST":
-        name = request.form["petName"]
-        lat = request.form["petLat"]
-        lon = request.form["petLon"]
+  australia_data = {
+    "state": "New South Wales",
+    "fatalities": 25,
+    "homes_lost": 2439,
+    "area_ha": 54000000,
+    "area_acres": 13300000,
+  }
 
-        pet = Pet(name=name, lat=lat, lon=lon)
-        db.session.add(pet)
-        db.session.commit()
-        return redirect("/", code=302)
+  mongo.db.australia_2019_2020_fire_season.update({}, australia_data, upsert=True)
 
-    return render_template("form.html")
-
-
-@app.route("/api/pals")
-def pals():
-    results = db.session.query(Pet.name, Pet.lat, Pet.lon).all()
-
-    hover_text = [result[0] for result in results]
-    lat = [result[1] for result in results]
-    lon = [result[2] for result in results]
-
-    pet_data = [{
-        "type": "scattergeo",
-        "locationmode": "USA-states",
-        "lat": lat,
-        "lon": lon,
-        "text": hover_text,
-        "hoverinfo": "text",
-        "marker": {
-            "size": 50,
-            "line": {
-                "color": "rgb(8,8,8)",
-                "width": 1
-            },
-        }
-    }]
-
-    return jsonify(pet_data)
+  # Redirect back to home page
+  return redirect("/")
 
 
 if __name__ == "__main__":
